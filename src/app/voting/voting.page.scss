@@ -1,0 +1,419 @@
+.voting-content {
+  --background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.voting-container {
+  padding: 20px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+// Header
+.voting-header {
+  text-align: center;
+  margin-bottom: 30px;
+  color: white;
+  
+  h1 {
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  }
+  
+  p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+  }
+  
+  .custom-message {
+    margin-top: 25px;
+    padding: 20px 25px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%);
+    border-radius: 20px;
+    backdrop-filter: blur(15px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    animation: glow 2s ease-in-out infinite alternate;
+    
+    .family-message {
+      font-size: 1.2rem;
+      font-style: italic;
+      font-weight: 600;
+      color: #fff;
+      margin: 0;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+      line-height: 1.5;
+      letter-spacing: 0.5px;
+    }
+  }
+  
+  @keyframes glow {
+    from {
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1), 0 0 20px rgba(255, 255, 255, 0.1);
+    }
+    to {
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2), 0 0 30px rgba(255, 255, 255, 0.2);
+    }
+  }
+}
+
+// Estadísticas
+.stats-section {
+  margin-bottom: 30px;
+}
+
+// Estadísticas
+.stats-section {
+  margin-bottom: 30px;
+}
+
+// Input del nombre
+.name-input-item {
+  --background: rgba(255, 255, 255, 0.95);
+  --border-radius: 10px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  
+  ion-label {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+  }
+  
+  .name-input {
+    --background: rgba(255, 255, 255, 0.9);
+    --color: #333;
+    --placeholder-color: #666;
+    --padding-start: 15px;
+    --padding-end: 15px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    min-height: 50px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    
+    &:focus-within {
+      --border-color: var(--ion-color-primary);
+      box-shadow: 0 0 0 2px rgba(var(--ion-color-primary-rgb), 0.2);
+    }
+  }
+}
+
+.stats-card {
+  --background: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  
+  h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+  }
+  
+  .stats-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .stat-item {
+    border-radius: 10px;
+    padding: 15px;
+    position: relative;
+    transition: all 0.3s ease;
+    min-width: 100px;
+    
+    &.boy-stat {
+      background: linear-gradient(90deg, #2196F3, #1976D2);
+      color: white;
+    }
+    
+    &.girl-stat {
+      background: linear-gradient(90deg, #E91E63, #C2185B);
+      color: white;
+    }
+    
+    .stat-content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: bold;
+      
+      .stat-emoji {
+        font-size: 1.5rem;
+      }
+      
+      .stat-label {
+        flex: 1;
+        font-size: 1.1rem;
+      }
+      
+      .stat-number {
+        font-size: 1.2rem;
+      }
+      
+      .stat-percentage {
+        font-size: 1rem;
+        opacity: 0.9;
+      }
+    }
+  }
+  
+  .total-votes {
+    text-align: center;
+    color: #666;
+    font-weight: bold;
+    margin: 0;
+  }
+}
+
+// Formulario de votación
+.voting-form {
+  margin-bottom: 30px;
+  
+  // Mensaje de votación cerrada
+  .voting-closed-content {
+    text-align: center;
+    padding: 30px;
+    
+    .warning-icon {
+      font-size: 4rem;
+      margin-bottom: 15px;
+      color: white;
+    }
+    
+    h2 {
+      color: white;
+      margin-bottom: 15px;
+      font-size: 1.5rem;
+    }
+    
+    p {
+      color: white;
+      opacity: 0.9;
+      margin-bottom: 10px;
+      
+      &:last-child {
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin: 0;
+      }
+    }
+  }
+  
+  ion-card {
+    --background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  }
+  
+  ion-item {
+    --background: transparent;
+    margin-bottom: 15px;
+  }
+  
+  .prediction-buttons {
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    
+    .prediction-btn {
+      --border-radius: 12px;
+      font-weight: bold;
+      height: 60px;
+    }
+  }
+  
+  .submit-btn {
+    margin-top: 20px;
+    --border-radius: 15px;
+    height: 55px;
+    font-weight: bold;
+  }
+}
+
+// Mensaje de agradecimiento
+.thank-you-section {
+  margin-bottom: 30px;
+  
+  .thank-you-content {
+    text-align: center;
+    padding: 30px;
+    
+    .success-icon {
+      font-size: 4rem;
+      margin-bottom: 15px;
+      color: white;
+    }
+    
+    h2 {
+      color: white;
+      margin-bottom: 10px;
+    }
+    
+    p {
+      color: white;
+      opacity: 0.9;
+      margin: 0;
+    }
+  }
+}
+
+// Mensaje de agradecimiento
+.thank-you-section {
+  margin: 30px 0;
+  
+  .thank-you-content {
+    text-align: center;
+    
+    .success-icon {
+      font-size: 4rem;
+      margin-bottom: 15px;
+      color: white;
+    }
+    
+    h2 {
+      color: white;
+      margin-bottom: 15px;
+      font-size: 1.6rem;
+    }
+    
+    p {
+      color: white;
+      opacity: 0.9;
+      font-size: 1.1rem;
+    }
+  }
+}
+
+// Mensaje de dispositivo ya votado
+.device-voted-section {
+  margin: 30px 0;
+  
+  .device-voted-content {
+    text-align: center;
+    
+    .success-icon {
+      font-size: 4rem;
+      margin-bottom: 15px;
+      color: white;
+    }
+    
+    h2 {
+      color: white;
+      margin-bottom: 15px;
+      font-size: 1.6rem;
+    }
+    
+    p {
+      color: white;
+      opacity: 0.9;
+      margin-bottom: 10px;
+      font-size: 1rem;
+      
+      &:last-child {
+        font-style: italic;
+        font-size: 0.9rem;
+        opacity: 0.8;
+      }
+    }
+  }
+}
+
+// Votos recientes
+.recent-votes {
+  h3 {
+    color: white;
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  }
+  
+  .votes-list {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  }
+  
+  .vote-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    .vote-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      
+      .vote-emoji {
+        font-size: 1.2rem;
+      }
+      
+      .voter-name {
+        font-weight: bold;
+        color: #333;
+      }
+      
+      .vote-prediction {
+        color: #666;
+        font-size: 0.9rem;
+      }
+    }
+    
+    .vote-time {
+      color: #999;
+      font-size: 0.8rem;
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 480px) {
+  .voting-container {
+    padding: 15px;
+  }
+  
+  .voting-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .stats-grid .stat-item {
+    padding: 10px;
+    
+    .stat-content {
+      gap: 8px;
+      
+      .stat-emoji {
+        font-size: 1.2rem;
+      }
+      
+      .stat-label {
+        font-size: 1rem;
+      }
+      
+      .stat-number {
+        font-size: 1.1rem;
+      }
+    }
+  }
+  
+  .prediction-buttons .prediction-btn {
+    height: 50px;
+  }
+  
+  .submit-btn {
+    height: 45px;
+  }
+}

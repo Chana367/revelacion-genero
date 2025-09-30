@@ -1,0 +1,146 @@
+<ion-header>
+  <ion-toolbar color="secondary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>🎊 ¡Momento de la Revelación! 🎊</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="reveal-content">
+  <div class="reveal-container">
+    
+    <!-- Calendario de cuenta regresiva -->
+    <div class="calendar-countdown" *ngIf="!revealed">
+      <div class="calendar-header">
+        <h2>📅 Calendario de la Revelación</h2>
+        <p class="calendar-subtitle">Cada día nos acercamos más al gran momento</p>
+      </div>
+      
+      <div class="countdown-display">
+        <div class="countdown-card" *ngIf="countdown$ | async as countdown">
+          <div class="time-remaining">
+            <h3>Tiempo restante:</h3>
+            <div class="countdown-numbers">
+              <div class="countdown-item">
+                <span class="number">{{ countdown.days }}</span>
+                <span class="label">Días</span>
+              </div>
+              <div class="countdown-item">
+                <span class="number">{{ countdown.hours }}</span>
+                <span class="label">Horas</span>
+              </div>
+              <div class="countdown-item">
+                <span class="number">{{ countdown.minutes }}</span>
+                <span class="label">Min</span>
+              </div>
+              <div class="countdown-item">
+                <span class="number">{{ countdown.seconds }}</span>
+                <span class="label">Seg</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="progress-section">
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width]="getProgressPercentage() + '%'"></div>
+            </div>
+            <p class="progress-text">{{ getProgressPercentage().toFixed(1) }}% del tiempo transcurrido</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="calendar-decoration">
+        <div class="calendar-icons">
+          <span class="calendar-day" *ngFor="let day of calendarDays" 
+                [class.completed]="day.completed"
+                [class.today]="day.isToday">
+            {{ day.number }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultado de la revelación -->
+    <div class="reveal-result" *ngIf="revealed">
+      <div class="confetti-container">
+        <div class="confetti" *ngFor="let confetti of confettiArray"></div>
+      </div>
+      
+      <div class="gender-reveal" [ngClass]="genderClass">
+        <div class="gender-icon">{{ genderEmoji }}</div>
+        <h1 class="gender-title">{{ genderMessage }}</h1>
+        <p class="gender-subtitle">{{ genderSubtitle }}</p>
+      </div>
+
+      <!-- Resultados de votación -->
+      <div class="voting-results-section" *ngIf="votingStats && votingStats.totalVotes > 0">
+        <ion-card class="results-card">
+          <ion-card-content>
+            <h3>📊 Resultados de la votación</h3>
+            <div class="results-grid">
+              <div class="result-item">
+                <div class="result-header">
+                  <span class="result-emoji">👦🏻</span>
+                  <span class="result-label">Team Niño</span>
+                </div>
+                <div class="result-bar boy-bar" [style.width]="votingStats.boyPercentage + '%'">
+                  <span class="result-percentage">{{ votingStats.boyPercentage.toFixed(1) }}%</span>
+                </div>
+                <span class="result-votes">{{ votingStats.boyVotes }} votos</span>
+              </div>
+              
+              <div class="result-item">
+                <div class="result-header">
+                  <span class="result-emoji">👧🏻</span>
+                  <span class="result-label">Team Niña</span>
+                </div>
+                <div class="result-bar girl-bar" [style.width]="votingStats.girlPercentage + '%'">
+                  <span class="result-percentage">{{ votingStats.girlPercentage.toFixed(1) }}%</span>
+                </div>
+                <span class="result-votes">{{ votingStats.girlVotes }} votos</span>
+              </div>
+            </div>
+            <p class="total-votes-text">Total de predicciones: {{ votingStats.totalVotes }}</p>
+            
+            <!-- Mensaje especial según resultado -->
+            <div class="prediction-result" [ngClass]="GENDER === 'niño' ? 'boy-won' : 'girl-won'" *ngIf="votingStats.totalVotes > 0">
+              <p *ngIf="(GENDER === 'niño' && votingStats.boyPercentage > votingStats.girlPercentage) || 
+                       (GENDER === 'niña' && votingStats.girlPercentage > votingStats.boyPercentage)">
+                🎯 <strong>¡La mayoría acertó!</strong> Team {{ GENDER === 'niño' ? 'Niño' : 'Niña' }} tenía razón.
+              </p>
+              <p *ngIf="(GENDER === 'niño' && votingStats.boyPercentage < votingStats.girlPercentage) || 
+                       (GENDER === 'niña' && votingStats.girlPercentage < votingStats.boyPercentage)">
+                😮 <strong>¡Sorpresa!</strong> Team {{ GENDER === 'niño' ? 'Niña' : 'Niño' }} tenía la predicción mayoritaria, pero...
+              </p>
+              <p *ngIf="votingStats.boyPercentage === votingStats.girlPercentage">
+                🤝 <strong>¡Empate perfecto!</strong> Estaba dividida la opinión.
+              </p>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+
+      <div class="celebration-buttons">
+        <ion-button 
+          expand="block" 
+          size="large" 
+          [color]="genderColor"
+          (click)="shareNews()">
+          <ion-icon name="share" slot="start"></ion-icon>
+          ¡Compartir la Noticia!
+        </ion-button>
+        
+        <ion-button 
+          expand="block" 
+          fill="outline" 
+          [color]="genderColor"
+          routerLink="/home">
+          <ion-icon name="home" slot="start"></ion-icon>
+          Volver al Inicio
+        </ion-button>
+      </div>
+    </div>
+
+  </div>
+</ion-content>

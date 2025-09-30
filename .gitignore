@@ -1,0 +1,56 @@
+# Specifies intentionally untracked files to ignore when using Git
+# http://git-scm.com/docs/gitignore
+
+*~
+*.sw[mnpcod]
+.tmp
+*.tmp
+*.tmp.*
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+UserInterfaceState.xcuserstate
+$RECYCLE.BIN/
+
+*.log
+log.txt
+npm-debug.log*
+
+/.idea
+/.ionic
+/.sass-cache
+/.sourcemaps
+/.versions
+/.vscode
+/coverage
+/dist
+/node_modules
+/platforms
+/plugins
+/www
+/android
+/ios
+/.gradle
+/e2e
+
+# Firebase configuration files
+/src/firebase/config.ts
+firebase.json
+.firebaserc
+firebase-debug.log
+firestore-debug.log
+firestore.rules
+storage.rules
+functions/node_modules/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Firebase Admin SDK private key
+service-account-key.json
+*-firebase-adminsdk-*.json

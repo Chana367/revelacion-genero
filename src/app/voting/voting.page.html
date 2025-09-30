@@ -1,0 +1,172 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>🗳️ Votación Team Bebé</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="voting-content">
+  <div class="voting-container">
+    
+    <!-- Header de votación -->
+    <div class="voting-header">
+      <h1>¿Qué crees que será?</h1>
+      <p>¡Únete a la predicción y vota por tu equipo!</p>
+      <div class="custom-message">
+        <p class="family-message">
+          Pronto sabremos si Gaby y Vicky tendrán carritos o muñecas en casa.
+        </p>
+      </div>
+    </div>
+
+    <!-- Estadísticas actuales -->
+    <div class="stats-section" *ngIf="stats$ | async as stats">
+      <ion-card class="stats-card">
+        <ion-card-content>
+          <h2>Resultados hasta ahora</h2>
+          <div class="stats-grid">
+            <div class="stat-item boy-stat" [style.width]="stats.boyPercentage + '%'">
+              <div class="stat-content">
+                <span class="stat-emoji">👦🏻</span>
+                <span class="stat-label">Team Niño</span>
+                <span class="stat-number">{{stats.boyVotes}}</span>
+                <span class="stat-percentage">{{stats.boyPercentage.toFixed(1)}}%</span>
+              </div>
+            </div>
+            <div class="stat-item girl-stat" [style.width]="stats.girlPercentage + '%'">
+              <div class="stat-content">
+                <span class="stat-emoji">👧🏻</span>
+                <span class="stat-label">Team Niña</span>
+                <span class="stat-number">{{stats.girlVotes}}</span>
+                <span class="stat-percentage">{{stats.girlPercentage.toFixed(1)}}%</span>
+              </div>
+            </div>
+          </div>
+          <p class="total-votes">Total de votos: {{stats.totalVotes}}</p>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Formulario de votación -->
+    <div class="voting-form" *ngIf="!hasVoted && !deviceHasVoted">
+      
+      <!-- Mensaje cuando la votación está cerrada -->
+      <ion-card color="warning" *ngIf="!votingEnabled">
+        <ion-card-content class="voting-closed-content">
+          <ion-icon name="time" class="warning-icon"></ion-icon>
+          <h2>Votación Cerrada</h2>
+          <p>La votación se ha cerrado porque queda menos de 1 minuto para la revelación.</p>
+          <p><strong>¡La revelación está por comenzar!</strong></p>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Formulario de votación (solo si está habilitada) -->
+      <ion-card *ngIf="votingEnabled">
+        <ion-card-header>
+          <ion-card-title>¡Haz tu predicción!</ion-card-title>
+          <ion-card-subtitle *ngIf="minutesRemaining > 1">
+            Tiempo restante para votar: {{ minutesRemaining.toFixed(0) }} minutos
+          </ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+          
+          <!-- Input para nombre -->
+          <ion-item class="name-input-item">
+            <ion-label position="stacked" color="primary">
+              <strong>Tu nombre</strong>
+            </ion-label>
+            <ion-input 
+              type="text" 
+              [(ngModel)]="voterName" 
+              placeholder="Escribe tu nombre aquí"
+              maxlength="30"
+              fill="outline"
+              class="name-input">
+            </ion-input>
+          </ion-item>
+
+          <!-- Botones de selección de género -->
+          <div class="prediction-buttons">
+            <ion-button 
+              expand="block" 
+              fill="outline"
+              [color]="selectedPrediction === 'niño' ? 'primary' : 'medium'"
+              [fill]="selectedPrediction === 'niño' ? 'solid' : 'outline'"
+              (click)="selectPrediction('niño')"
+              class="prediction-btn">
+              <ion-icon name="male" slot="start"></ion-icon>
+              👦🏻 Team Niño
+              <ion-icon name="checkmark" slot="end" *ngIf="selectedPrediction === 'niño'"></ion-icon>
+            </ion-button>
+
+            <ion-button 
+              expand="block" 
+              fill="outline"
+              [color]="selectedPrediction === 'niña' ? 'tertiary' : 'medium'"
+              [fill]="selectedPrediction === 'niña' ? 'solid' : 'outline'"
+              (click)="selectPrediction('niña')"
+              class="prediction-btn">
+              <ion-icon name="female" slot="start"></ion-icon>
+              👧🏻 Team Niña
+              <ion-icon name="checkmark" slot="end" *ngIf="selectedPrediction === 'niña'"></ion-icon>
+            </ion-button>
+          </div>
+
+          <!-- Botón de envío -->
+          <ion-button 
+            expand="block" 
+            size="large" 
+            color="success"
+            (click)="submitVote()"
+            [disabled]="!voterName.trim() || !selectedPrediction || isSubmitting || !votingEnabled || deviceHasVoted"
+            class="submit-btn">
+            <ion-icon name="send" slot="start" *ngIf="!isSubmitting"></ion-icon>
+            <ion-spinner name="crescent" slot="start" *ngIf="isSubmitting"></ion-spinner>
+            {{ isSubmitting ? 'Enviando...' : '¡Enviar mi voto!' }}
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Mensaje cuando el dispositivo ya votó -->
+    <div class="device-voted-section" *ngIf="deviceHasVoted && !hasVoted">
+      <ion-card color="tertiary">
+        <ion-card-content class="device-voted-content">
+          <ion-icon name="checkmark-done" class="success-icon"></ion-icon>
+          <h2>¡Ya votaste desde este dispositivo!</h2>
+          <p>Este dispositivo ya registró un voto anteriormente.</p>
+          <p><em>Solo se permite un voto por dispositivo para mantener la votación justa.</em></p>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Mensaje de agradecimiento -->
+    <div class="thank-you-section" *ngIf="showThankYou">
+      <ion-card color="success">
+        <ion-card-content class="thank-you-content">
+          <ion-icon name="checkmark-circle" class="success-icon"></ion-icon>
+          <h2>¡Gracias por votar!</h2>
+          <p>Tu predicción ha sido registrada exitosamente</p>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Votos recientes -->
+    <div class="recent-votes" *ngIf="recentVotes.length > 0">
+      <h3>Predicciones recientes</h3>
+      <div class="votes-list">
+        <div class="vote-item" *ngFor="let vote of recentVotes">
+          <div class="vote-info">
+            <span class="vote-emoji">{{ getVoteIcon(vote.prediction) }}</span>
+            <span class="voter-name">{{ vote.voterName }}</span>
+            <span class="vote-prediction">Team {{ vote.prediction === 'niño' ? 'Niño' : 'Niña' }}</span>
+          </div>
+          <span class="vote-time">{{ getRelativeTime(vote.timestamp) }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</ion-content>

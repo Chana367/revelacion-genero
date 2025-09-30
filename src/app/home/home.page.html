@@ -1,0 +1,184 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>🎉 Revelación de Género 🎉</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="main-content">
+  <div class="container">
+    
+    <!-- Header con iconos de bebé -->
+    <div class="header-section">
+      <div class="baby-icons">
+        <span class="baby-icon blue">👶🏻</span>
+        <span class="question-icon">❓</span>
+        <span class="baby-icon pink">👶🏻</span>
+      </div>
+      <h1 class="main-title">¿Niño o Niña?</h1>
+      <p class="subtitle">¡Descúbrelo muy pronto!</p>
+    </div>
+
+    <!-- Sección de votación -->
+    <div class="voting-section" *ngIf="votingEnabled && !deviceHasVoted">
+      <ion-card class="voting-card">
+        <ion-card-content>
+          <h3>🗳️ ¡Haz tu predicción!</h3>
+          <p>Únete a la votación y elige tu equipo</p>
+          <ion-button 
+            expand="block" 
+            color="secondary" 
+            routerLink="/voting"
+            class="voting-btn">
+            <ion-icon name="people" slot="start"></ion-icon>
+            Ir a Votar
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Mensaje cuando el dispositivo ya votó -->
+    <div class="device-voted-section" *ngIf="deviceHasVoted">
+      <ion-card class="voted-card">
+        <ion-card-content>
+          <h3>✅ ¡Ya votaste!</h3>
+          <p>Este dispositivo ya registró su voto</p>
+          <ion-button 
+            expand="block" 
+            color="tertiary" 
+            routerLink="/voting"
+            class="view-results-btn">
+            <ion-icon name="bar-chart" slot="start"></ion-icon>
+            Ver Resultados
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Contador regresivo -->
+    <div class="countdown-section" *ngIf="countdown$ | async as countdown">
+      <ng-container *ngIf="!countdown.isEventPassed; else eventPassed">
+        <h2 class="countdown-title">Tiempo restante:</h2>
+        
+        <div class="countdown-grid">
+          <div class="time-unit">
+            <div class="time-number">{{ countdown.days }}</div>
+            <div class="time-label">Días</div>
+          </div>
+          
+          <div class="time-separator">:</div>
+          
+          <div class="time-unit">
+            <div class="time-number">{{ countdown.hours }}</div>
+            <div class="time-label">Horas</div>
+          </div>
+          
+          <div class="time-separator">:</div>
+          
+          <div class="time-unit">
+            <div class="time-number">{{ countdown.minutes }}</div>
+            <div class="time-label">Minutos</div>
+          </div>
+          
+          <div class="time-separator">:</div>
+          
+          <div class="time-unit">
+            <div class="time-number">{{ countdown.seconds }}</div>
+            <div class="time-label">Segundos</div>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #eventPassed>
+        <div class="direct-reveal-section">
+          <div class="confetti-container">
+            <div class="confetti" *ngFor="let confetti of confettiArray"></div>
+          </div>
+          
+          <div class="gender-reveal-home" [ngClass]="genderClass">
+            <div class="gender-icon-home">{{ genderEmoji }}</div>
+            <h1 class="gender-title-home">{{ genderMessage }}</h1>
+            <p class="gender-subtitle-home">{{ genderSubtitle }}</p>
+          </div>
+
+          <!-- Resultados de votación -->
+          <div class="voting-results-section" *ngIf="votingStats && votingStats.totalVotes > 0">
+            <ion-card class="results-card">
+              <ion-card-content>
+                <h3>📊 Resultados de la votación</h3>
+                <div class="results-grid">
+                  <div class="result-item">
+                    <div class="result-header">
+                      <span class="result-emoji">👦🏻</span>
+                      <span class="result-label">Team Niño</span>
+                    </div>
+                    <div class="result-bar boy-bar" [style.width]="votingStats.boyPercentage + '%'">
+                      <span class="result-percentage">{{ votingStats.boyPercentage.toFixed(1) }}%</span>
+                    </div>
+                    <span class="result-votes">{{ votingStats.boyVotes }} votos</span>
+                  </div>
+                  
+                  <div class="result-item">
+                    <div class="result-header">
+                      <span class="result-emoji">👧🏻</span>
+                      <span class="result-label">Team Niña</span>
+                    </div>
+                    <div class="result-bar girl-bar" [style.width]="votingStats.girlPercentage + '%'">
+                      <span class="result-percentage">{{ votingStats.girlPercentage.toFixed(1) }}%</span>
+                    </div>
+                    <span class="result-votes">{{ votingStats.girlVotes }} votos</span>
+                  </div>
+                </div>
+                <p class="total-votes-text">Total de predicciones: {{ votingStats.totalVotes }}</p>
+                
+                <!-- Mensaje especial según resultado -->
+                <div class="prediction-result" [ngClass]="GENDER === 'niño' ? 'boy-won' : 'girl-won'" *ngIf="votingStats.totalVotes > 0">
+                  <p *ngIf="(GENDER === 'niño' && votingStats.boyPercentage > votingStats.girlPercentage) || 
+                           (GENDER === 'niña' && votingStats.girlPercentage > votingStats.boyPercentage)">
+                    🎯 <strong>¡La mayoría acertó!</strong> Team {{ GENDER === 'niño' ? 'Niño' : 'Niña' }} tenía razón.
+                  </p>
+                  <p *ngIf="(GENDER === 'niño' && votingStats.boyPercentage < votingStats.girlPercentage) || 
+                           (GENDER === 'niña' && votingStats.girlPercentage < votingStats.boyPercentage)">
+                    😮 <strong>¡Sorpresa!</strong> Team {{ GENDER === 'niño' ? 'Niña' : 'Niño' }} tenía la predicción mayoritaria, pero...
+                  </p>
+                  <p *ngIf="votingStats.boyPercentage === votingStats.girlPercentage">
+                    🤝 <strong>¡Empate perfecto!</strong> Estaba dividida la opinión.
+                  </p>
+                </div>
+              </ion-card-content>
+            </ion-card>
+          </div>
+
+          <div class="celebration-buttons-home">
+            <ion-button 
+              expand="block" 
+              size="large" 
+              [color]="genderColor"
+              (click)="shareNews()">
+              <ion-icon name="share" slot="start"></ion-icon>
+              ¡Compartir la Noticia!
+            </ion-button>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Información de la fecha -->
+    <div class="date-info">
+      <ion-card>
+        <ion-card-content>
+          <h3>📅 Fecha de Revelación</h3>
+          <p class="reveal-date">{{ formatDate(revealDate) }}</p>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Mensaje de integridad -->
+    <div class="integrity-warning" *ngIf="!timeIntegrityVerified">
+      <ion-chip color="warning">
+        <ion-icon name="warning"></ion-icon>
+        <ion-label>Verifica la hora de tu dispositivo</ion-label>
+      </ion-chip>
+    </div>
+
+  </div>
+</ion-content>
