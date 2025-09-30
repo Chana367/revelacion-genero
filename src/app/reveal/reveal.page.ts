@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { CountdownService, CountdownData } from '../services/countdown.service';
 import { VotingService } from '../services/voting.service';
+import { ConfigurationService } from '../services/configuration.service';
 
 interface CalendarDay {
   number: number;
@@ -26,14 +27,15 @@ export class RevealPage implements OnInit {
   calendarDays: CalendarDay[] = [];
   votingStats: any = null;
   
-  // Configuración del género (puedes cambiar esto)
-  readonly GENDER: 'niño' | 'niña' = 'niño'; // Cambiar a 'niño' o 'niña'
+  // Género obtenido desde Firebase
+  currentGender: 'niño' | 'niña' = 'niño';
   private revealDate: Date;
   private startDate: Date;  
 
   constructor(
     private countdownService: CountdownService,
-    private votingService: VotingService
+    private votingService: VotingService,
+    private configService: ConfigurationService
   ) { 
     this.countdown$ = this.countdownService.getCountdown();
     this.revealDate = this.countdownService.getRevealDate();
@@ -46,10 +48,22 @@ export class RevealPage implements OnInit {
     this.confettiArray = Array.from({length: 50}, (_, i) => i);
     // Generar días del calendario
     this.generateCalendarDays();
+    // Suscribirse a la configuración de Firebase
+    this.subscribeToConfiguration();
     // Verificar si ya es momento de revelar
     this.checkIfRevealTime();
     // Suscribirse al countdown para revelar automáticamente
     this.subscribeToCountdown();
+  }
+
+  private subscribeToConfiguration() {
+    this.configService.config$.subscribe(config => {
+      this.currentGender = config.gender;
+      this.revealDate = config.revealDate;
+      // Recalcular fecha de inicio cuando cambie la configuración
+      this.startDate = new Date(this.revealDate.getTime() - (30 * 24 * 60 * 60 * 1000));
+      this.generateCalendarDays();
+    });
   }
 
   private subscribeToCountdown() {
@@ -107,7 +121,7 @@ export class RevealPage implements OnInit {
       this.votingStats = stats;
     });
 
-    if (this.GENDER === 'niña') {
+    if (this.currentGender === 'niña') {
       this.genderClass = 'girl-reveal';
       this.genderEmoji = '👧🏻';
       this.genderMessage = '¡Es una NIÑA!';
@@ -133,7 +147,7 @@ export class RevealPage implements OnInit {
   }
 
   shareNews() {
-    const shareText = `🎉 ¡Acabamos de revelar que será ${this.GENDER.toUpperCase()}! 🎉`;
+    const shareText = `🎉 ¡Acabamos de revelar que será ${this.currentGender.toUpperCase()}! 🎉`;
     
     if (navigator.share) {
       navigator.share({

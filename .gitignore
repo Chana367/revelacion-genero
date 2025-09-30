@@ -35,7 +35,7 @@ npm-debug.log*
 /e2e
 
 # Firebase configuration files
-/src/firebase/config.ts
+/src/app/firebase/config.ts
 firebase.json
 .firebaserc
 firebase-debug.log

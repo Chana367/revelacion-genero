@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { db } from '../../firebase/config';
+import { db } from '../firebase/config';
 import { 
   doc, 
   getDoc, 
@@ -12,7 +12,6 @@ import {
 export interface AppConfiguration {
   revealDate: Date;
   gender: 'niño' | 'niña';
-  lastUpdated: Date;
 }
 
 @Injectable({
@@ -25,20 +24,18 @@ export class ConfigurationService {
   
   private configSubject = new BehaviorSubject<AppConfiguration>({
     revealDate: this.DEFAULT_REVEAL_DATE,
-    gender: this.DEFAULT_GENDER,
-    lastUpdated: new Date()
+    gender: this.DEFAULT_GENDER
   });
   
   public config$ = this.configSubject.asObservable();
   private currentConfig: AppConfiguration;
   private firebaseInitialized = false;
 
-  constructor() { 
+  constructor() {
     this.currentConfig = this.configSubject.value;
+    console.log('🔧 ConfigurationService iniciado con:', this.currentConfig);
     this.initializeFirebaseConfig();
-  }
-
-  /**
+  }  /**
    * Inicializar configuración desde Firebase
    */
   private async initializeFirebaseConfig() {
@@ -63,20 +60,32 @@ export class ConfigurationService {
       
       if (configSnap.exists()) {
         const data = configSnap.data();
+        console.log('📥 Datos raw desde Firebase:', data);
         this.currentConfig = {
           revealDate: data['revealDate']?.toDate() || this.DEFAULT_REVEAL_DATE,
-          gender: data['gender'] || this.DEFAULT_GENDER,
-          lastUpdated: data['lastUpdated']?.toDate() || new Date()
+          gender: data['gender'] || this.DEFAULT_GENDER
         };
         this.configSubject.next(this.currentConfig);
         console.log('✅ Configuración cargada desde Firebase:', this.currentConfig);
       } else {
-        // Crear configuración inicial en Firebase
-        await this.createInitialConfig();
+        console.warn('⚠️ Documento de configuración no encontrado en Firebase');
+        console.log('📝 Por favor, crea manualmente el documento "app-settings" en la colección "configuration"');
+        // Usar configuración por defecto
+        this.currentConfig = {
+          revealDate: this.DEFAULT_REVEAL_DATE,
+          gender: this.DEFAULT_GENDER
+        };
+        this.configSubject.next(this.currentConfig);
       }
     } catch (error) {
       console.error('❌ Error cargando configuración:', error);
-      throw error;
+      console.warn('⚠️ Usando configuración por defecto');
+      // Usar configuración por defecto si Firebase falla
+      this.currentConfig = {
+        revealDate: this.DEFAULT_REVEAL_DATE,
+        gender: this.DEFAULT_GENDER
+      };
+      this.configSubject.next(this.currentConfig);
     }
   }
 
@@ -106,10 +115,10 @@ export class ConfigurationService {
     onSnapshot(configRef, (doc) => {
       if (doc.exists()) {
         const data = doc.data();
+        console.log('📥 Datos actualizados desde Firebase:', data);
         this.currentConfig = {
           revealDate: data['revealDate']?.toDate() || this.DEFAULT_REVEAL_DATE,
-          gender: data['gender'] || this.DEFAULT_GENDER,
-          lastUpdated: data['lastUpdated']?.toDate() || new Date()
+          gender: data['gender'] || this.DEFAULT_GENDER
         };
         this.configSubject.next(this.currentConfig);
         console.log('🔄 Configuración actualizada desde Firebase:', this.currentConfig);
@@ -163,5 +172,13 @@ export class ConfigurationService {
    */
   getCurrentConfig(): AppConfiguration {
     return this.currentConfig;
+  }
+
+  /**
+   * Método para recargar manualmente la configuración desde Firebase
+   */
+  async reloadConfiguration() {
+    console.log('🔄 Recargando configuración desde Firebase...');
+    await this.loadConfigFromFirebase();
   }
 }

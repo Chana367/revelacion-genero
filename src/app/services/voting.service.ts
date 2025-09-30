@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, from } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { CountdownService } from './countdown.service';
-import { db } from '../../firebase/config';
+import { db } from '../firebase/config';
 import { 
   collection, 
   addDoc, 

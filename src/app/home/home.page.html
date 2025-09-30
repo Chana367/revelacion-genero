@@ -131,14 +131,14 @@
                 <p class="total-votes-text">Total de predicciones: {{ votingStats.totalVotes }}</p>
                 
                 <!-- Mensaje especial según resultado -->
-                <div class="prediction-result" [ngClass]="GENDER === 'niño' ? 'boy-won' : 'girl-won'" *ngIf="votingStats.totalVotes > 0">
-                  <p *ngIf="(GENDER === 'niño' && votingStats.boyPercentage > votingStats.girlPercentage) || 
-                           (GENDER === 'niña' && votingStats.girlPercentage > votingStats.boyPercentage)">
-                    🎯 <strong>¡La mayoría acertó!</strong> Team {{ GENDER === 'niño' ? 'Niño' : 'Niña' }} tenía razón.
+                <div class="prediction-result" [ngClass]="currentGender === 'niño' ? 'boy-won' : 'girl-won'" *ngIf="votingStats.totalVotes > 0">
+                  <p *ngIf="(currentGender === 'niño' && votingStats.boyPercentage > votingStats.girlPercentage) || 
+                           (currentGender === 'niña' && votingStats.girlPercentage > votingStats.boyPercentage)">
+                    🎯 <strong>¡La mayoría acertó!</strong> Team {{ currentGender === 'niño' ? 'Niño' : 'Niña' }} tenía razón.
                   </p>
-                  <p *ngIf="(GENDER === 'niño' && votingStats.boyPercentage < votingStats.girlPercentage) || 
-                           (GENDER === 'niña' && votingStats.girlPercentage < votingStats.boyPercentage)">
-                    😮 <strong>¡Sorpresa!</strong> Team {{ GENDER === 'niño' ? 'Niña' : 'Niño' }} tenía la predicción mayoritaria, pero...
+                  <p *ngIf="(currentGender === 'niño' && votingStats.boyPercentage < votingStats.girlPercentage) || 
+                           (currentGender === 'niña' && votingStats.girlPercentage < votingStats.boyPercentage)">
+                    😮 <strong>¡Sorpresa!</strong> Team {{ currentGender === 'niño' ? 'Niña' : 'Niño' }} tenía la predicción mayoritaria, pero...
                   </p>
                   <p *ngIf="votingStats.boyPercentage === votingStats.girlPercentage">
                     🤝 <strong>¡Empate perfecto!</strong> Estaba dividida la opinión.
