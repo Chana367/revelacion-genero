@@ -341,6 +341,13 @@
         background: linear-gradient(90deg, #2196F3, #1976D2);
       }
       
+      .stat-content {
+        .stat-label {
+          color: white;
+          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+        }
+      }
+      
       // Cuando el porcentaje es alto, mejorar el contraste del texto
       &.high-percentage {
         .stat-content {
@@ -359,6 +366,13 @@
       
       .progress-bar {
         background: linear-gradient(90deg, #E91E63, #C2185B);
+      }
+      
+      .stat-content {
+        .stat-label {
+          color: white;
+          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+        }
       }
       
       // Cuando el porcentaje es alto, mejorar el contraste del texto
