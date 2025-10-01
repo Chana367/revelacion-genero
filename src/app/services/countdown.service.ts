@@ -25,14 +25,21 @@ export class CountdownService {
   private lastServerSync: number = 0;
   private readonly SYNC_INTERVAL = 10 * 60 * 1000; // 10 minutos
   private readonly MAX_TIME_DIFF_THRESHOLD = 5 * 60 * 1000; // 5 minutos
+  
+  // Control de seguridad: solo permite revelación después de sincronización exitosa
+  private hasValidServerSync: boolean = false;
 
   constructor(
     private http: HttpClient,
     private configService: ConfigurationService
   ) { 
-    // Sincronizar con servidor al inicializar (sin bloquear)
-    this.syncWithServer().catch(error => {
-      console.warn('⚠️ Error en sincronización inicial:', error);
+    // CRÍTICO: Sincronizar con servidor al inicializar (BLOQUEAR hasta completar)
+    console.log('🔐 INICIANDO SINCRONIZACIÓN CRÍTICA DE SEGURIDAD...');
+    this.syncWithServer().then(() => {
+      console.log('✅ Sincronización de seguridad completada');
+    }).catch(error => {
+      console.error('❌ FALLO CRÍTICO: No se pudo sincronizar con servidor:', error);
+      console.warn('⚠️ SEGURIDAD COMPROMETIDA: Usando modo de solo lectura');
     });
   }
 
@@ -46,9 +53,11 @@ export class CountdownService {
       this.http.get<any>(this.TIME_API_URL).pipe(
         take(1),
         catchError((error) => {
-          console.warn('⚠️ No se pudo sincronizar con servidor, usando hora local:', error);
+          console.error('❌ FALLO CRÍTICO DE SEGURIDAD: No se pudo sincronizar con servidor:', error);
+          console.warn('⚠️ MODO INSEGURO: Usando hora local (vulnerable a manipulación)');
           this.timeOffset = 0;
           this.lastServerSync = Date.now();
+          this.hasValidServerSync = false; // CRÍTICO: Sin sincronización válida
           resolve();
           return of(null);
         })
@@ -72,12 +81,14 @@ export class CountdownService {
             const adjustedLocalTime = localTimeBeforeRequest + networkDelay;
             this.timeOffset = serverTime - adjustedLocalTime;
             this.lastServerSync = Date.now();
+            this.hasValidServerSync = true; // CRÍTICO: Marcar sincronización exitosa
             
             console.log('🌐 Sincronización con servidor completada:');
             console.log(`   - Diferencia de tiempo: ${this.timeOffset}ms`);
             console.log(`   - Delay de red: ${networkDelay}ms`);
             console.log(`   - Hora servidor: ${new Date(serverTime).toISOString()}`);
             console.log(`   - Hora local ajustada: ${new Date(adjustedLocalTime).toISOString()}`);
+            console.log('🔐 SEGURIDAD: Sincronización válida establecida');
             
             // Verificar si hay una diferencia significativa
             if (Math.abs(this.timeOffset) > this.MAX_TIME_DIFF_THRESHOLD) {
@@ -125,7 +136,7 @@ export class CountdownService {
   }
 
   /**
-   * Calcula el tiempo restante hasta la fecha de revelación usando hora ajustada
+   * Calcula el tiempo restante hasta la fecha de revelación con verificación de seguridad
    */
   getCountdown(): Observable<CountdownData> {
     return this.configService.config$.pipe(
@@ -137,13 +148,26 @@ export class CountdownService {
             const currentTime = this.getCurrentTime();
             const timeDiff = config.revealDate.getTime() - currentTime.getTime();
 
-            if (timeDiff <= 0) {
+            // SEGURIDAD CRÍTICA: Solo permitir revelación si hay sincronización válida del servidor
+            if (timeDiff <= 0 && this.hasValidServerSync) {
+              console.log('🔐 REVELACIÓN AUTORIZADA: Tiempo pasado con sincronización válida del servidor');
               return {
                 days: 0,
                 hours: 0,
                 minutes: 0,
                 seconds: 0,
                 isEventPassed: true
+              };
+            } else if (timeDiff <= 0 && !this.hasValidServerSync) {
+              console.warn('🚨 BLOQUEO DE SEGURIDAD: Tiempo pasado pero sin sincronización válida del servidor');
+              console.warn('⚠️ Posible manipulación de tiempo local detectada');
+              // Mostrar 1 segundo restante para evitar revelación prematura
+              return {
+                days: 0,
+                hours: 0,
+                minutes: 0,
+                seconds: 1,
+                isEventPassed: false
               };
             }
 
@@ -177,6 +201,13 @@ export class CountdownService {
    */
   getGender(): 'niño' | 'niña' {
     return this.configService.getGender();
+  }
+
+  /**
+   * Verifica si hay sincronización válida con el servidor (para seguridad)
+   */
+  hasValidSync(): boolean {
+    return this.hasValidServerSync;
   }
 
   /**
