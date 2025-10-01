@@ -123,16 +123,58 @@
     padding: 15px;
     position: relative;
     transition: all 0.3s ease;
-    min-width: 100px;
+    min-width: 200px;
+    width: 100%;
+    overflow: hidden;
     
     &.boy-stat {
-      background: linear-gradient(90deg, #2196F3, #1976D2);
-      color: white;
+      background: rgba(33, 150, 243, 0.2);
+      border: 2px solid #2196F3;
+      color: #1976D2;
+      
+      .progress-bar {
+        background: linear-gradient(90deg, #2196F3, #1976D2);
+      }
+      
+      // Cuando el porcentaje es alto, mejorar el contraste del texto
+      &.high-percentage {
+        .stat-content {
+          .stat-emoji, .stat-label, .stat-number {
+            color: white;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+          }
+        }
+      }
     }
     
     &.girl-stat {
-      background: linear-gradient(90deg, #E91E63, #C2185B);
-      color: white;
+      background: rgba(233, 30, 99, 0.2);
+      border: 2px solid #E91E63;
+      color: #C2185B;
+      
+      .progress-bar {
+        background: linear-gradient(90deg, #E91E63, #C2185B);
+      }
+      
+      // Cuando el porcentaje es alto, mejorar el contraste del texto
+      &.high-percentage {
+        .stat-content {
+          .stat-emoji, .stat-label, .stat-number {
+            color: white;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+          }
+        }
+      }
+    }
+    
+    .progress-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      transition: width 0.8s ease;
+      z-index: 0;
+      border-radius: 8px;
     }
     
     .stat-content {
@@ -140,6 +182,8 @@
       align-items: center;
       gap: 10px;
       font-weight: bold;
+      position: relative;
+      z-index: 1;
       
       .stat-emoji {
         font-size: 1.5rem;
@@ -148,15 +192,25 @@
       .stat-label {
         flex: 1;
         font-size: 1.1rem;
+        font-weight: 700;
       }
       
       .stat-number {
         font-size: 1.2rem;
+        font-weight: 800;
       }
       
       .stat-percentage {
-        font-size: 1rem;
-        opacity: 0.9;
+        font-size: 1.1rem;
+        font-weight: 900;
+        opacity: 1;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+        padding: 6px 10px;
+        border-radius: 15px;
+        border: 2px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
       }
     }
   }

@@ -2,7 +2,6 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
 import { CountdownService, CountdownData } from '../services/countdown.service';
 import { VotingService } from '../services/voting.service';
-import { ConfigurationService } from '../services/configuration.service';
 
 @Component({
   selector: 'app-home',
@@ -35,8 +34,7 @@ export class HomePage implements OnInit, OnDestroy {
 
   constructor(
     private countdownService: CountdownService,
-    private votingService: VotingService,
-    private configService: ConfigurationService
+    private votingService: VotingService
   ) {
     this.countdown$ = this.countdownService.getCountdown();
     this.revealDate = this.countdownService.getRevealDate();
@@ -45,23 +43,14 @@ export class HomePage implements OnInit, OnDestroy {
   ngOnInit() {
     // Crear array para confetti animation
     this.confettiArray = Array.from({length: 50}, (_, i) => i);
-    // Suscribirse a los cambios de configuración de Firebase
-    this.subscribeToConfiguration();
+    // Obtener género desde Firebase
+    this.currentGender = this.countdownService.getGender();
     // Verificar integridad del tiempo al iniciar
     this.verifyTimeIntegrity();
     // Verificar si el dispositivo ya votó
     this.deviceHasVoted = this.votingService.hasDeviceVoted();
     // Suscribirse al countdown para revelar automáticamente
     this.subscribeToCountdown();
-  }
-
-  private subscribeToConfiguration() {
-    const configSub = this.configService.config$.subscribe(config => {
-      this.currentGender = config.gender;
-      this.revealDate = config.revealDate;
-      console.log('🔄 Configuración actualizada en Home:', { gender: this.currentGender, revealDate: this.revealDate });
-    });
-    this.subscriptions.add(configSub);
   }
 
   private subscribeToCountdown() {
@@ -98,15 +87,23 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   formatDate(date: Date): string {
-    return date.toLocaleDateString('es-AR', {
+    const dateFormatted = date.toLocaleDateString('es-AR', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
       timeZone: 'America/Argentina/Buenos_Aires'
     });
+    
+    const timeFormatted = date.toLocaleTimeString('es-AR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'America/Argentina/Buenos_Aires'
+    });
+    
+    // Combinar fecha y hora con "hs" de forma más compacta
+    return `${dateFormatted}, ${timeFormatted}hs`;
   }
 
   private setGenderData() {

@@ -27,21 +27,23 @@
         <ion-card-content>
           <h2>Resultados hasta ahora</h2>
           <div class="stats-grid">
-            <div class="stat-item boy-stat" [style.width]="stats.boyPercentage + '%'">
+            <div class="stat-item boy-stat" [class.high-percentage]="stats.boyPercentage > 80">
               <div class="stat-content">
                 <span class="stat-emoji">👦🏻</span>
                 <span class="stat-label">Team Niño</span>
                 <span class="stat-number">{{stats.boyVotes}}</span>
                 <span class="stat-percentage">{{stats.boyPercentage.toFixed(1)}}%</span>
               </div>
+              <div class="progress-bar" [style.width]="stats.boyPercentage + '%'"></div>
             </div>
-            <div class="stat-item girl-stat" [style.width]="stats.girlPercentage + '%'">
+            <div class="stat-item girl-stat" [class.high-percentage]="stats.girlPercentage > 80">
               <div class="stat-content">
                 <span class="stat-emoji">👧🏻</span>
                 <span class="stat-label">Team Niña</span>
                 <span class="stat-number">{{stats.girlVotes}}</span>
                 <span class="stat-percentage">{{stats.girlPercentage.toFixed(1)}}%</span>
               </div>
+              <div class="progress-bar" [style.width]="stats.girlPercentage + '%'"></div>
             </div>
           </div>
           <p class="total-votes">Total de votos: {{stats.totalVotes}}</p>
