@@ -66,6 +66,9 @@ export class HomePage implements OnInit, OnDestroy, AfterViewInit {
     setTimeout(() => {
       this.isComponentReady = true;
       
+      // Verificar inmediatamente si la revelación ya debería estar activa
+      this.checkAndRevealIfNeeded();
+      
       // Hacer el componente accesible globalmente para debugging
       (window as any).revealApp = this;
       console.log('🎯 Métodos disponibles:');
@@ -75,6 +78,8 @@ export class HomePage implements OnInit, OnDestroy, AfterViewInit {
       console.log('   - revealApp.debugConfig() - 🔍 Ver configuración y tiempos');
       console.log('   - revealApp.fixRevealDate() - 🛠️ Corregir fecha a 1 oct 23:30');
       console.log('   - revealApp.updateRevealDate(días) - 📅 Actualizar fecha');
+      console.log('   - revealApp.scrollToReveal() - 🎯 Scroll manual hacia revelación');
+      console.log('   - revealApp.scrollToRevealNow() - ⚡ Scroll inmediato (testing)');
     }, 50);
   }
 
@@ -87,6 +92,11 @@ export class HomePage implements OnInit, OnDestroy, AfterViewInit {
           revealDate: this.revealDate,
           gender: this.currentGender
         });
+        
+        // Verificar si la revelación ya debería estar activa después de recibir la configuración
+        if (this.isComponentReady) {
+          setTimeout(() => this.checkAndRevealIfNeeded(), 100);
+        }
       } else {
         console.log('⚠️ Esperando configuración de Firebase...');
         this.revealDate = null;
@@ -123,12 +133,16 @@ export class HomePage implements OnInit, OnDestroy, AfterViewInit {
           this.setGenderData();
           this.revealDataReady = true;
           this.startConfettiAnimation();
+          // Scroll automático hacia la revelación
+          this.scrollToRevealation();
         }, 1000);
       } else if (countdown.isEventPassed && this.revealStarted && !this.revealDataReady) {
         // Si ya pasó el evento pero los datos no están listos, configurarlos inmediatamente
         this.setGenderData();
         this.revealDataReady = true;
         this.startConfettiAnimation();
+        // Scroll automático hacia la revelación
+        this.scrollToRevealation();
       }
     });
     this.subscriptions.add(sub);
@@ -326,7 +340,141 @@ export class HomePage implements OnInit, OnDestroy, AfterViewInit {
     console.log('Estado del componente:');
     console.log('   - isComponentReady:', this.isComponentReady);
     console.log('   - revealDataReady:', this.revealDataReady);
+    console.log('   - revealStarted:', this.revealStarted);
+    console.log('   - genderMessage:', this.genderMessage);
     console.log('   - revealDate:', this.revealDate);
+    
+    // Diagnóstico específico del scroll
+    console.log('Estado del DOM para scroll:');
+    const element = document.getElementById('revelation-section');
+    console.log('   - Elemento revelation-section:', element ? '✅ Encontrado' : '❌ No encontrado');
+    if (element) {
+      const rect = element.getBoundingClientRect();
+      console.log(`   - Posición: top=${rect.top}, left=${rect.left}`);
+      console.log(`   - Tamaño: width=${rect.width}, height=${rect.height}`);
+      console.log(`   - Visible: ${rect.top >= 0 && rect.left >= 0 && rect.bottom <= window.innerHeight && rect.right <= window.innerWidth}`);
+    }
     console.log('==============================');
+  }
+
+  /**
+   * Verificar si la revelación ya debería estar activa y activarla inmediatamente
+   */
+  private checkAndRevealIfNeeded() {
+    if (!this.revealDate) {
+      console.log('⏳ Esperando fecha de revelación...');
+      return;
+    }
+
+    const now = new Date();
+    const isEventPassed = now >= this.revealDate;
+    
+    console.log('🔍 Verificación inicial de revelación:');
+    console.log(`   - Fecha actual: ${now.toISOString()}`);
+    console.log(`   - Fecha revelación: ${this.revealDate.toISOString()}`);
+    console.log(`   - ¿Ya pasó el evento?: ${isEventPassed}`);
+    
+    if (isEventPassed && !this.revealStarted) {
+      console.log('🚀 Activando revelación inmediatamente...');
+      this.revealStarted = true;
+      
+      setTimeout(() => {
+        this.setGenderData();
+        this.revealDataReady = true;
+        this.startConfettiAnimation();
+        // Scroll automático después de que esté lista
+        setTimeout(() => this.scrollToRevealation(), 1000);
+      }, 500);
+    } else if (isEventPassed && this.revealDataReady) {
+      // Si ya está todo listo, solo hacer scroll
+      setTimeout(() => this.scrollToRevealation(), 1000);
+    }
+  }
+
+  /**
+   * Scroll suave hacia la sección de revelación (público para testing)
+   */
+  scrollToReveal() {
+    this.scrollToRevealation();
+  }
+
+  /**
+   * Scroll inmediato para testing (sin delays)
+   */
+  scrollToRevealNow() {
+    const element = document.getElementById('revelation-section');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      console.log('✅ Scroll inmediato ejecutado');
+    } else {
+      console.error('❌ Elemento revelation-section no encontrado');
+      // Mostrar todos los elementos con ID para debugging
+      const allElements = document.querySelectorAll('[id]');
+      console.log('🔍 Elementos con ID disponibles:', Array.from(allElements).map(el => el.id));
+    }
+  }
+
+  /**
+   * Scroll suave hacia la sección de revelación con verificaciones mejoradas
+   */
+  private scrollToRevealation() {
+    console.log('🎯 Iniciando scroll hacia revelación...');
+    
+    // Función para intentar el scroll
+    const attemptScroll = (attempt: number = 1) => {
+      const revelationElement = document.getElementById('revelation-section');
+      
+      console.log(`🔍 Intento ${attempt} de scroll:`);
+      console.log(`   - Elemento encontrado: ${revelationElement ? '✅' : '❌'}`);
+      console.log(`   - revealDataReady: ${this.revealDataReady}`);
+      console.log(`   - genderMessage: ${this.genderMessage}`);
+      console.log(`   - isComponentReady: ${this.isComponentReady}`);
+      
+      if (revelationElement) {
+        try {
+          // Método 1: scrollIntoView (más confiable)
+          revelationElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+            inline: 'nearest'
+          });
+          
+          console.log('✅ Scroll realizado con scrollIntoView');
+          return true;
+        } catch (error) {
+          console.warn('⚠️ scrollIntoView falló, intentando window.scrollTo:', error);
+          
+          try {
+            // Método 2: window.scrollTo como fallback
+            const elementRect = revelationElement.getBoundingClientRect();
+            const absoluteElementTop = elementRect.top + window.pageYOffset;
+            
+            window.scrollTo({
+              top: Math.max(0, absoluteElementTop - 80),
+              behavior: 'smooth'
+            });
+            
+            console.log('✅ Scroll realizado con window.scrollTo');
+            return true;
+          } catch (error2) {
+            console.error('❌ Ambos métodos de scroll fallaron:', error2);
+            return false;
+          }
+        }
+      } else {
+        console.warn(`⚠️ Elemento no encontrado en intento ${attempt}`);
+        
+        // Reintentar hasta 5 veces con delay incremental
+        if (attempt < 5) {
+          setTimeout(() => attemptScroll(attempt + 1), attempt * 500);
+        } else {
+          console.error('❌ No se pudo encontrar el elemento después de 5 intentos');
+        }
+        return false;
+      }
+    };
+    
+    // Delay inicial y luego intentar scroll
+    setTimeout(() => attemptScroll(), 500);
   }
 }

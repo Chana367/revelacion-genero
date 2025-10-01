@@ -98,7 +98,7 @@
           <p class="loading-subtitle">Un momento por favor...</p>
         </div>
 
-        <div class="direct-reveal-section" *ngIf="isComponentReady && revealDataReady && genderMessage">
+        <div class="direct-reveal-section" id="revelation-section" *ngIf="isComponentReady && revealDataReady && genderMessage">
           <div class="confetti-container">
             <div class="confetti" *ngFor="let confetti of confettiArray"></div>
           </div>
