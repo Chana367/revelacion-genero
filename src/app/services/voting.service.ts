@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, from } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { CountdownService } from './countdown.service';
 import { db } from '../firebase/config';
@@ -52,16 +53,31 @@ export class VotingService {
   }
 
   /**
-   * Verificar si la votación está habilitada (no debe permitirse votación con menos de 1 minuto)
+   * Verificar si la votación está habilitada usando hora del servidor
    */
   isVotingEnabled(): boolean {
     const revealDate = this.countdownService.getRevealDate();
+    // Usar hora local como aproximación, pero la validación real se hace en el servidor
     const now = new Date();
     const timeDiff = revealDate.getTime() - now.getTime();
     const minutesRemaining = timeDiff / (1000 * 60);
     
     // Deshabilitar votación si queda menos de 1 minuto o ya pasó la fecha
     return minutesRemaining > 1;
+  }
+
+  /**
+   * Verificar si la votación está habilitada usando hora del servidor (método asíncrono)
+   */
+  isVotingEnabledAsync(): Observable<boolean> {
+    const revealDate = this.countdownService.getRevealDate();
+    return this.countdownService.getCurrentServerTime().pipe(
+      map(serverTime => {
+        const timeDiff = revealDate.getTime() - serverTime.getTime();
+        const minutesRemaining = timeDiff / (1000 * 60);
+        return minutesRemaining > 1;
+      })
+    );
   }
 
   /**
@@ -89,51 +105,51 @@ export class VotingService {
   }
 
   /**
-   * Enviar un voto
+   * Enviar un voto con verificación de hora del servidor
    */
   submitVote(voterName: string, prediction: 'niño' | 'niña'): Observable<boolean> {
-    return new Observable(observer => {
-      // Verificar si la votación está habilitada
-      if (!this.isVotingEnabled()) {
-        observer.next(false);
-        observer.complete();
-        return;
-      }
+    // Verificar si este dispositivo ya votó (verificación local rápida)
+    if (this.hasDeviceVoted()) {
+      return from([false]);
+    }
 
-      // Verificar si este dispositivo ya votó
-      if (this.hasDeviceVoted()) {
-        observer.next(false);
-        observer.complete();
-        return;
-      }
+    // Verificar si la votación está habilitada usando hora del servidor
+    return this.isVotingEnabledAsync().pipe(
+      map(votingEnabled => {
+        if (!votingEnabled) {
+          return false;
+        }
 
-      const voteData = {
-        voterName: voterName.trim(),
-        prediction,
-        timestamp: new Date()
-      };
+        const voteData = {
+          voterName: voterName.trim(),
+          prediction,
+          timestamp: new Date()
+        };
 
-      // Intentar enviar a Firebase primero
-      if (this.firebaseInitialized) {
-        this.sendToFirebase(voteData).then((docId) => {
-          // Éxito con Firebase
+        // Procesar el voto de forma síncrona para el map
+        try {
+          if (this.firebaseInitialized) {
+            // Enviar a Firebase (promesa que se ejecuta en background)
+            this.sendToFirebase(voteData).then((docId) => {
+              console.log('Voto enviado a Firebase:', docId);
+            }).catch((error) => {
+              console.error('Error enviando a Firebase, guardando localmente:', error);
+              this.submitVoteLocally(voteData);
+            });
+          } else {
+            // Usar localStorage como respaldo
+            this.submitVoteLocally(voteData);
+          }
+          
+          // Marcar dispositivo como que ya votó
           this.markDeviceAsVoted();
-          observer.next(true);
-          observer.complete();
-        }).catch((error) => {
-          console.error('Error enviando a Firebase, usando localStorage:', error);
-          // Fallback a localStorage
-          this.submitVoteLocally(voteData);
-          observer.next(true);
-          observer.complete();
-        });
-      } else {
-        // Usar localStorage como respaldo
-        this.submitVoteLocally(voteData);
-        observer.next(true);
-        observer.complete();
-      }
-    });
+          return true;
+        } catch (error) {
+          console.error('Error procesando voto:', error);
+          return false;
+        }
+      })
+    );
   }
 
   /**

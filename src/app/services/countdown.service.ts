@@ -36,16 +36,16 @@ export class CountdownService {
   }
 
   /**
-   * Calcula el tiempo restante hasta la fecha de revelación
+   * Calcula el tiempo restante hasta la fecha de revelación usando hora del servidor
    */
   getCountdown(): Observable<CountdownData> {
     return this.configService.config$.pipe(
       switchMap(config => 
         interval(1000).pipe(
           startWith(0),
-          map(() => {
-            const now = new Date();
-            const timeDiff = config.revealDate.getTime() - now.getTime();
+          switchMap(() => this.getServerTime()),
+          map(serverTime => {
+            const timeDiff = config.revealDate.getTime() - serverTime.getTime();
 
             if (timeDiff <= 0) {
               return {
@@ -101,5 +101,12 @@ export class CountdownService {
         return timeDifference < 5 * 60 * 1000;
       })
     );
+  }
+
+  /**
+   * Obtiene la hora actual del servidor (método público para otros servicios)
+   */
+  getCurrentServerTime(): Observable<Date> {
+    return this.getServerTime();
   }
 }

@@ -172,12 +172,30 @@
       </ion-card>
     </div>
 
-    <!-- Mensaje de integridad -->
+    <!-- Mensaje de integridad y seguridad -->
     <div class="integrity-warning" *ngIf="!timeIntegrityVerified">
       <ion-chip color="warning">
         <ion-icon name="warning"></ion-icon>
-        <ion-label>Verifica la hora de tu dispositivo</ion-label>
+        <ion-label>🔐 Sistema protegido contra manipulación de fecha/hora</ion-label>
       </ion-chip>
+    </div>
+    
+    <!-- Información de seguridad -->
+    <div class="security-info">
+      <ion-chip color="success" fill="outline">
+        <ion-icon name="shield-checkmark"></ion-icon>
+        <ion-label>Hora sincronizada con servidor</ion-label>
+      </ion-chip>
+    </div>
+
+    <!-- Copyright -->
+    <div class="copyright-section">
+      <p class="copyright-text">
+        © 2025 Desarrollado por 
+        <a href="https://instagram.com/chana.fp" target="_blank" class="developer-link">
+          Francisco Paredes
+        </a>
+      </p>
     </div>
 
   </div>
