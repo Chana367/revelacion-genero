@@ -19,7 +19,7 @@
     </div>
 
     <!-- Sección de votación -->
-    <div class="voting-section" *ngIf="votingEnabled && !deviceHasVoted">
+    <div class="voting-section" *ngIf="isComponentReady && votingEnabled && !deviceHasVoted">
       <ion-card class="voting-card">
         <ion-card-content>
           <h3>🗳️ ¡Haz tu predicción!</h3>
@@ -37,7 +37,7 @@
     </div>
 
     <!-- Mensaje cuando el dispositivo ya votó -->
-    <div class="device-voted-section" *ngIf="deviceHasVoted">
+    <div class="device-voted-section" *ngIf="isComponentReady && deviceHasVoted">
       <ion-card class="voted-card">
         <ion-card-content>
           <h3>✅ ¡Ya votaste!</h3>
@@ -56,7 +56,7 @@
 
     <!-- Contador regresivo -->
     <div class="countdown-section" *ngIf="countdown$ | async as countdown">
-      <ng-container *ngIf="!countdown.isEventPassed; else eventPassed">
+      <ng-container *ngIf="isComponentReady && !countdown.isEventPassed; else eventPassed">
         <h2 class="countdown-title">Tiempo restante:</h2>
         
         <div class="countdown-grid">
@@ -89,7 +89,16 @@
       </ng-container>
 
       <ng-template #eventPassed>
-        <div class="direct-reveal-section">
+        <!-- Loading state mientras se prepara la revelación -->
+        <div class="reveal-loading" *ngIf="isComponentReady && !revealDataReady">
+          <div class="loading-animation">
+            <ion-spinner name="crescent" color="light"></ion-spinner>
+          </div>
+          <h2 class="loading-title">¡Preparando la revelación!</h2>
+          <p class="loading-subtitle">Un momento por favor...</p>
+        </div>
+
+        <div class="direct-reveal-section" *ngIf="isComponentReady && revealDataReady && genderMessage">
           <div class="confetti-container">
             <div class="confetti" *ngFor="let confetti of confettiArray"></div>
           </div>
@@ -101,7 +110,7 @@
           </div>
 
           <!-- Resultados de votación -->
-          <div class="voting-results-section" *ngIf="votingStats && votingStats.totalVotes > 0">
+          <div class="voting-results-section" *ngIf="isComponentReady && revealDataReady && genderMessage && votingStats && votingStats.totalVotes > 0">
             <ion-card class="results-card">
               <ion-card-content>
                 <h3>📊 Resultados de la votación</h3>
@@ -148,7 +157,7 @@
             </ion-card>
           </div>
 
-          <div class="celebration-buttons-home">
+          <div class="celebration-buttons-home" *ngIf="isComponentReady && revealDataReady && genderMessage">
             <ion-button 
               expand="block" 
               size="large" 
@@ -163,17 +172,28 @@
     </div>
 
     <!-- Información de la fecha -->
-    <div class="date-info">
+    <div class="date-info" *ngIf="isComponentReady">
       <ion-card>
         <ion-card-content>
-          <h3>📅 Fecha de Revelación</h3>
-          <p class="reveal-date">{{ formatDate(revealDate) }}</p>
+          <h3>
+            <span>📅</span>
+            <span>Fecha de Revelación</span>
+          </h3>
+          <div class="reveal-date" *ngIf="revealDate; else loadingDate">
+            {{ formatDate(revealDate) }}
+          </div>
+          <ng-template #loadingDate>
+            <div class="reveal-date loading-date">
+              <ion-spinner name="dots" color="primary"></ion-spinner>
+              <span>Cargando fecha...</span>
+            </div>
+          </ng-template>
         </ion-card-content>
       </ion-card>
     </div>
 
     <!-- Mensaje de integridad y seguridad -->
-    <div class="integrity-warning" *ngIf="!timeIntegrityVerified">
+    <div class="integrity-warning" *ngIf="isComponentReady && !timeIntegrityVerified">
       <ion-chip color="warning">
         <ion-icon name="warning"></ion-icon>
         <ion-label>🔐 Sistema protegido contra manipulación de fecha/hora</ion-label>
@@ -181,7 +201,7 @@
     </div>
     
     <!-- Información de seguridad -->
-    <div class="security-info">
+    <div class="security-info" *ngIf="isComponentReady">
       <ion-chip color="success" fill="outline">
         <ion-icon name="shield-checkmark"></ion-icon>
         <ion-label>Hora sincronizada con servidor</ion-label>
@@ -189,7 +209,7 @@
     </div>
 
     <!-- Copyright -->
-    <div class="copyright-section">
+    <div class="copyright-section" *ngIf="isComponentReady">
       <p class="copyright-text">
         © 2025 Desarrollado por 
         <a href="https://instagram.com/chana.fp" target="_blank" class="developer-link">

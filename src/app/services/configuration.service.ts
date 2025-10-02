@@ -19,21 +19,16 @@ export interface AppConfiguration {
 })
 export class ConfigurationService {
   private readonly CONFIG_DOC_ID = 'app-settings';
-  private readonly DEFAULT_REVEAL_DATE = new Date('2025-09-25T19:20:00-03:00');
   private readonly DEFAULT_GENDER: 'niño' | 'niña' = 'niño';
   
-  private configSubject = new BehaviorSubject<AppConfiguration>({
-    revealDate: this.DEFAULT_REVEAL_DATE,
-    gender: this.DEFAULT_GENDER
-  });
+  private configSubject = new BehaviorSubject<AppConfiguration | null>(null);
   
   public config$ = this.configSubject.asObservable();
-  private currentConfig: AppConfiguration;
+  private currentConfig: AppConfiguration | null = null;
   private firebaseInitialized = false;
 
   constructor() {
-    this.currentConfig = this.configSubject.value;
-    console.log('🔧 ConfigurationService iniciado con:', this.currentConfig);
+    console.log('🔧 ConfigurationService iniciado - esperando datos de Firebase');
     this.initializeFirebaseConfig();
   }  /**
    * Inicializar configuración desde Firebase
@@ -61,50 +56,48 @@ export class ConfigurationService {
       if (configSnap.exists()) {
         const data = configSnap.data();
         console.log('📥 Datos raw desde Firebase:', data);
+        
+        // Validar que los datos requeridos existan
+        if (!data['revealDate']) {
+          console.error('❌ revealDate no encontrado en Firebase');
+          throw new Error('revealDate requerido en configuración de Firebase');
+        }
+        
+        // Debug detallado del timestamp
+        const firebaseTimestamp = data['revealDate'];
+        const convertedDate = firebaseTimestamp.toDate();
+        console.log('🔍 Debug timestamp:');
+        console.log('   - Firebase Timestamp:', firebaseTimestamp);
+        console.log('   - Timestamp seconds:', firebaseTimestamp.seconds);
+        console.log('   - Timestamp nanoseconds:', firebaseTimestamp.nanoseconds);
+        console.log('   - Converted Date:', convertedDate);
+        console.log('   - Converted Date ISO:', convertedDate.toISOString());
+        console.log('   - Converted Date Local:', convertedDate.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }));
+        
         this.currentConfig = {
-          revealDate: data['revealDate']?.toDate() || this.DEFAULT_REVEAL_DATE,
+          revealDate: convertedDate,
           gender: data['gender'] || this.DEFAULT_GENDER
         };
         this.configSubject.next(this.currentConfig);
         console.log('✅ Configuración cargada desde Firebase:', this.currentConfig);
       } else {
-        console.warn('⚠️ Documento de configuración no encontrado en Firebase');
-        console.log('📝 Por favor, crea manualmente el documento "app-settings" en la colección "configuration"');
-        // Usar configuración por defecto
-        this.currentConfig = {
-          revealDate: this.DEFAULT_REVEAL_DATE,
-          gender: this.DEFAULT_GENDER
-        };
-        this.configSubject.next(this.currentConfig);
+        console.error('❌ Documento de configuración no encontrado en Firebase');
+        console.log('📝 Necesitas crear el documento "app-settings" en la colección "configuration" con:');
+        console.log('   - revealDate: Timestamp');
+        console.log('   - gender: "niño" | "niña"');
+        throw new Error('Configuración de Firebase requerida pero no encontrada');
       }
     } catch (error) {
       console.error('❌ Error cargando configuración:', error);
-      console.warn('⚠️ Usando configuración por defecto');
-      // Usar configuración por defecto si Firebase falla
-      this.currentConfig = {
-        revealDate: this.DEFAULT_REVEAL_DATE,
-        gender: this.DEFAULT_GENDER
-      };
-      this.configSubject.next(this.currentConfig);
+      console.error('🚨 La aplicación requiere configuración válida en Firebase');
+      // No establecer configuración si Firebase falla
+      this.currentConfig = null;
+      this.configSubject.next(null);
+      throw error;
     }
   }
 
-  /**
-   * Crear configuración inicial en Firebase
-   */
-  private async createInitialConfig() {
-    try {
-      const configRef = doc(db, 'configuration', this.CONFIG_DOC_ID);
-      await setDoc(configRef, {
-        revealDate: Timestamp.fromDate(this.DEFAULT_REVEAL_DATE),
-        gender: this.DEFAULT_GENDER,
-        lastUpdated: Timestamp.fromDate(new Date())
-      });
-      console.log('🆕 Configuración inicial creada en Firebase');
-    } catch (error) {
-      console.error('❌ Error creando configuración inicial:', error);
-    }
-  }
+
 
   /**
    * Configurar listener en tiempo real para la configuración
@@ -115,16 +108,37 @@ export class ConfigurationService {
     onSnapshot(configRef, (doc) => {
       if (doc.exists()) {
         const data = doc.data();
-        console.log('📥 Datos actualizados desde Firebase:', data);
+        console.log('📥 Datos actualizados desde Firebase (listener):', data);
+        
+        // Validar que los datos requeridos existan
+        if (!data['revealDate']) {
+          console.error('❌ revealDate no encontrado en Firebase (listener)');
+          return;
+        }
+        
+        // Debug detallado del timestamp en el listener
+        const firebaseTimestamp = data['revealDate'];
+        const convertedDate = firebaseTimestamp.toDate();
+        console.log('🔍 Debug timestamp (listener):');
+        console.log('   - Firebase Timestamp:', firebaseTimestamp);
+        console.log('   - Converted Date:', convertedDate);
+        console.log('   - Converted Date Local:', convertedDate.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }));
+        
         this.currentConfig = {
-          revealDate: data['revealDate']?.toDate() || this.DEFAULT_REVEAL_DATE,
+          revealDate: convertedDate,
           gender: data['gender'] || this.DEFAULT_GENDER
         };
         this.configSubject.next(this.currentConfig);
         console.log('🔄 Configuración actualizada desde Firebase:', this.currentConfig);
+      } else {
+        console.error('❌ Documento de configuración eliminado de Firebase');
+        this.currentConfig = null;
+        this.configSubject.next(null);
       }
     }, (error) => {
       console.error('❌ Error en listener de configuración:', error);
+      this.currentConfig = null;
+      this.configSubject.next(null);
     });
   }
 
@@ -149,15 +163,65 @@ export class ConfigurationService {
   /**
    * Obtener fecha de revelación actual
    */
-  getRevealDate(): Date {
-    return this.currentConfig.revealDate;
+  getRevealDate(): Date | null {
+    return this.currentConfig?.revealDate || null;
   }
 
   /**
    * Obtener género configurado
    */
   getGender(): 'niño' | 'niña' {
-    return this.currentConfig.gender;
+    return this.currentConfig?.gender || this.DEFAULT_GENDER;
+  }
+
+  /**
+   * Verificar si la configuración está cargada
+   */
+  isConfigurationLoaded(): boolean {
+    return this.currentConfig !== null;
+  }
+
+  /**
+   * Método para debug - verificar configuración actual
+   */
+  debugConfiguration() {
+    console.log('🔍 DEBUG - Configuración actual:');
+    if (this.currentConfig) {
+      console.log('   - Configuración cargada: ✅');
+      console.log('   - Fecha de revelación:', this.currentConfig.revealDate);
+      console.log('   - Fecha ISO:', this.currentConfig.revealDate.toISOString());
+      console.log('   - Fecha local (AR):', this.currentConfig.revealDate.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }));
+      console.log('   - Género:', this.currentConfig.gender);
+    } else {
+      console.log('   - Configuración cargada: ❌');
+      console.log('   - Estado: Esperando datos de Firebase');
+    }
+    console.log('   - Timestamp actual:', new Date().toISOString());
+    return this.currentConfig;
+  }
+
+  /**
+   * Actualizar fecha específica (útil para corregir problemas)
+   */
+  async setSpecificRevealDate(year: number, month: number, day: number, hour: number, minute: number): Promise<void> {
+    // Crear fecha en timezone de Argentina
+    const revealDate = new Date();
+    revealDate.setFullYear(year, month - 1, day); // month es 0-indexed
+    revealDate.setHours(hour, minute, 0, 0);
+    
+    console.log('🕐 Configurando fecha específica:');
+    console.log('   - Fecha creada:', revealDate);
+    console.log('   - Fecha ISO:', revealDate.toISOString());
+    console.log('   - Fecha local (AR):', revealDate.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }));
+    
+    try {
+      const currentGender = this.currentConfig?.gender || this.DEFAULT_GENDER;
+      await this.updateConfiguration(revealDate, currentGender);
+      console.log('✅ Fecha específica actualizada correctamente');
+    } catch (error) {
+      console.error('❌ Error actualizando fecha específica:', error);
+      throw error;
+    }
   }
 
   /**

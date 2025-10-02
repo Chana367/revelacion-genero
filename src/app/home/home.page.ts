@@ -1,16 +1,17 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
 import { CountdownService, CountdownData } from '../services/countdown.service';
 import { VotingService } from '../services/voting.service';
+import { ConfigurationService } from '../services/configuration.service';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
 })
-export class HomePage implements OnInit, OnDestroy {
+export class HomePage implements OnInit, OnDestroy, AfterViewInit {
   countdown$: Observable<CountdownData>;
-  revealDate: Date;
+  revealDate: Date | null = null;
   timeIntegrityVerified = false;
   votingEnabled = true;
   deviceHasVoted = false;
@@ -23,6 +24,8 @@ export class HomePage implements OnInit, OnDestroy {
   genderSubtitle = '';
   genderColor = '';
   revealStarted = false;
+  revealDataReady = false;
+  isComponentReady = false;
   
   // Variables para mostrar resultados de votación
   votingStats: any = null;
@@ -34,16 +37,23 @@ export class HomePage implements OnInit, OnDestroy {
 
   constructor(
     private countdownService: CountdownService,
-    private votingService: VotingService
+    private votingService: VotingService,
+    private configService: ConfigurationService
   ) {
     this.countdown$ = this.countdownService.getCountdown();
     this.revealDate = this.countdownService.getRevealDate();
   }
 
   ngOnInit() {
+    // Resetear completamente el estado al inicializar
+    this.resetRevealState();
+    
+    // Suscribirse a cambios de configuración
+    this.subscribeToConfigChanges();
+    
     // Crear array para confetti animation
     this.confettiArray = Array.from({length: 50}, (_, i) => i);
-    // Obtener género desde Firebase
+    // Obtener género desde Firebase (pero no configurar datos de revelación aún)
     this.currentGender = this.countdownService.getGender();
     // Verificar integridad del tiempo al iniciar
     this.verifyTimeIntegrity();
@@ -51,6 +61,53 @@ export class HomePage implements OnInit, OnDestroy {
     this.deviceHasVoted = this.votingService.hasDeviceVoted();
     // Suscribirse al countdown para revelar automáticamente
     this.subscribeToCountdown();
+    
+    // Marcar componente como listo después de que todo esté inicializado
+    setTimeout(() => {
+      this.isComponentReady = true;
+      
+      // Hacer el componente accesible globalmente para debugging
+      (window as any).revealApp = this;
+      console.log('🎯 Métodos disponibles:');
+      console.log('   - revealApp.fullDiagnose() - 🏥 Diagnóstico completo de errores');
+      console.log('   - revealApp.showSyncStats() - 📊 Estadísticas de sincronización');
+      console.log('   - revealApp.forceSync() - 🔄 Forzar sincronización con servidor');
+      console.log('   - revealApp.debugConfig() - 🔍 Ver configuración y tiempos');
+      console.log('   - revealApp.fixRevealDate() - 🛠️ Corregir fecha a 1 oct 23:30');
+      console.log('   - revealApp.updateRevealDate(días) - 📅 Actualizar fecha');
+    }, 50);
+  }
+
+  private subscribeToConfigChanges() {
+    const configSub = this.configService.config$.subscribe(config => {
+      if (config) {
+        this.revealDate = config.revealDate;
+        this.currentGender = config.gender;
+        console.log('🔄 Configuración actualizada en componente:', {
+          revealDate: this.revealDate,
+          gender: this.currentGender
+        });
+      } else {
+        console.log('⚠️ Esperando configuración de Firebase...');
+        this.revealDate = null;
+      }
+    });
+    this.subscriptions.add(configSub);
+  }
+
+  private resetRevealState() {
+    this.revealStarted = false;
+    this.revealDataReady = false;
+    this.isComponentReady = false;
+    this.genderClass = '';
+    this.genderEmoji = '';
+    this.genderMessage = '';
+    this.genderSubtitle = '';
+    this.genderColor = '';
+    this.votingStats = null;
+    
+    // Asegurar que la fecha se reinicialice correctamente
+    this.revealDate = this.countdownService.getRevealDate();
   }
 
   private subscribeToCountdown() {
@@ -61,17 +118,42 @@ export class HomePage implements OnInit, OnDestroy {
       if (countdown.isEventPassed && !this.revealStarted) {
         // Revelar automáticamente cuando termine el tiempo
         this.revealStarted = true;
+        // Pequeño delay para evitar parpadeo
         setTimeout(() => {
           this.setGenderData();
+          this.revealDataReady = true;
           this.startConfettiAnimation();
         }, 1000);
+      } else if (countdown.isEventPassed && this.revealStarted && !this.revealDataReady) {
+        // Si ya pasó el evento pero los datos no están listos, configurarlos inmediatamente
+        this.setGenderData();
+        this.revealDataReady = true;
+        this.startConfettiAnimation();
       }
     });
     this.subscriptions.add(sub);
   }
 
+  ngAfterViewInit() {
+    // Protección adicional después de que la vista esté completamente cargada
+    setTimeout(() => {
+      if (!this.isComponentReady) {
+        this.isComponentReady = true;
+      }
+    }, 100);
+  }
+
   ngOnDestroy() {
     this.subscriptions.unsubscribe();
+    // Resetear variables para evitar estado persistente
+    this.revealStarted = false;
+    this.revealDataReady = false;
+    this.isComponentReady = false;
+    this.genderClass = '';
+    this.genderEmoji = '';
+    this.genderMessage = '';
+    this.genderSubtitle = '';
+    this.genderColor = '';
   }
 
   private verifyTimeIntegrity() {
@@ -86,24 +168,36 @@ export class HomePage implements OnInit, OnDestroy {
     this.subscriptions.add(sub);
   }
 
-  formatDate(date: Date): string {
-    const dateFormatted = date.toLocaleDateString('es-AR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      timeZone: 'America/Argentina/Buenos_Aires'
-    });
-    
-    const timeFormatted = date.toLocaleTimeString('es-AR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-      timeZone: 'America/Argentina/Buenos_Aires'
-    });
-    
-    // Combinar fecha y hora con "hs" de forma más compacta
-    return `${dateFormatted}, ${timeFormatted}hs`;
+  formatDate(date: Date | null): string {
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+      return 'Cargando fecha desde Firebase...';
+    }
+
+    try {
+      const dateFormatted = date.toLocaleDateString('es-AR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'America/Argentina/Buenos_Aires'
+      });
+      
+      const timeFormatted = date.toLocaleTimeString('es-AR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'America/Argentina/Buenos_Aires'
+      });
+      
+      // Capitalizar la primera letra del día de la semana
+      const capitalizedDate = dateFormatted.charAt(0).toUpperCase() + dateFormatted.slice(1);
+      
+      // Combinar fecha y hora con "hs" de forma más compacta
+      return `${capitalizedDate}, ${timeFormatted}hs`;
+    } catch (error) {
+      console.error('Error formateando fecha:', error);
+      return 'Error al mostrar la fecha';
+    }
   }
 
   private setGenderData() {
@@ -161,5 +255,78 @@ export class HomePage implements OnInit, OnDestroy {
         alert(shareText);
       }
     }
+  }
+
+  // Método para actualizar fecha manualmente (útil para desarrollo/testing)
+  async updateRevealDate(days: number = 14) {
+    const newDate = new Date();
+    newDate.setDate(newDate.getDate() + days);
+    newDate.setHours(19, 20, 0, 0);
+    
+    try {
+      await this.configService.updateConfiguration(newDate, this.currentGender);
+      this.revealDate = newDate;
+      console.log('✅ Fecha actualizada manualmente a:', newDate.toLocaleDateString('es-AR'));
+    } catch (error) {
+      console.error('❌ Error actualizando fecha manualmente:', error);
+    }
+  }
+
+  // Método para corregir la fecha específica (1 octubre 23:30)
+  async fixRevealDate() {
+    try {
+      await this.configService.setSpecificRevealDate(2025, 10, 1, 23, 30);
+      console.log('✅ Fecha corregida a: 1 de octubre 2025, 23:30');
+      // Recargar la fecha
+      this.revealDate = this.countdownService.getRevealDate();
+    } catch (error) {
+      console.error('❌ Error corrigiendo fecha:', error);
+    }
+  }
+
+  // Método para debug
+  debugConfig() {
+    console.log('🔍 === DEBUG CONFIGURACIÓN ===');
+    this.configService.debugConfiguration();
+    console.log('🔍 Fecha actual en componente:', this.revealDate);
+    console.log('🔍 Hora actual ajustada:', this.countdownService.getCurrentServerTime());
+    console.log('🔍 Hora local:', new Date());
+    console.log('🔍 ============================');
+  }
+
+  // Método para forzar sincronización
+  async forceSync() {
+    try {
+      await this.countdownService.forceSyncWithServer();
+      console.log('✅ Sincronización forzada completada');
+    } catch (error) {
+      console.error('❌ Error en sincronización forzada:', error);
+    }
+  }
+
+  // Método para ver estadísticas de sincronización
+  showSyncStats() {
+    const stats = this.countdownService.getSyncStats();
+    console.log('📊 === ESTADÍSTICAS DE SINCRONIZACIÓN ===');
+    console.log('   - Offset de tiempo:', stats.timeOffset, 'ms');
+    console.log('   - Última sincronización:', Math.round(stats.lastSyncAgo / 1000), 'segundos atrás');
+    console.log('   - Próxima sincronización:', Math.round(stats.nextSyncIn / 1000), 'segundos');
+    console.log('   - Necesita sincronización:', stats.isSyncNeeded ? '🔴 Sí' : '🟢 No');
+    console.log('   - Hora local:', stats.localTime.toLocaleString('es-AR'));
+    console.log('   - Hora ajustada:', stats.currentAdjustedTime.toLocaleString('es-AR'));
+    console.log('=========================================');
+    return stats;
+  }
+
+  // Método para diagnóstico completo
+  fullDiagnose() {
+    console.log('🏥 === DIAGNÓSTICO COMPLETO ===');
+    this.countdownService.diagnose();
+    this.configService.debugConfiguration();
+    console.log('Estado del componente:');
+    console.log('   - isComponentReady:', this.isComponentReady);
+    console.log('   - revealDataReady:', this.revealDataReady);
+    console.log('   - revealDate:', this.revealDate);
+    console.log('==============================');
   }
 }

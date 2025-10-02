@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject, from } from 'rxjs';
+import { Observable, BehaviorSubject, from, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { CountdownService } from './countdown.service';
@@ -71,13 +71,14 @@ export class VotingService {
    */
   isVotingEnabledAsync(): Observable<boolean> {
     const revealDate = this.countdownService.getRevealDate();
-    return this.countdownService.getCurrentServerTime().pipe(
-      map(serverTime => {
-        const timeDiff = revealDate.getTime() - serverTime.getTime();
-        const minutesRemaining = timeDiff / (1000 * 60);
-        return minutesRemaining > 1;
-      })
-    );
+    if (!revealDate) {
+      return of(false); // No hay fecha configurada
+    }
+    
+    const serverTime = this.countdownService.getCurrentServerTime();
+    const timeDiff = revealDate.getTime() - serverTime.getTime();
+    const minutesRemaining = timeDiff / (1000 * 60);
+    return of(minutesRemaining > 1);
   }
 
   /**
