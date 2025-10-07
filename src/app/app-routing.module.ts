@@ -22,8 +22,11 @@ const routes: Routes = [
   {
     path: 'voting',
     loadChildren: () => import('./voting/voting.module').then( m => m.VotingPageModule)
+  },
+  {
+    path: 'all-votes',
+    loadChildren: () => import('./all-votes/all-votes.module').then( m => m.AllVotesPageModule)
   }
-
 
 ];
 @NgModule({

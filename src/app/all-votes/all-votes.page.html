@@ -1,0 +1,110 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/voting"></ion-back-button>
+    </ion-buttons>
+    <ion-title>📊 Todas las Predicciones</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="all-votes-content">
+  <div class="all-votes-container">
+    
+    <!-- Header con estadísticas -->
+    <div class="votes-header">
+      <h1>Todas las Predicciones</h1>
+      <div class="stats-summary" *ngIf="stats$ | async as stats">
+        <div class="summary-item">
+          <span class="summary-number">{{ stats.totalVotes }}</span>
+          <span class="summary-label">Total de votos</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-number">{{ stats.boyPercentage.toFixed(1) }}%</span>
+          <span class="summary-label">Team Niño</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-number">{{ stats.girlPercentage.toFixed(1) }}%</span>
+          <span class="summary-label">Team Niña</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de todos los votos -->
+    <div class="votes-list-container" *ngIf="paginatedVotes.length > 0">
+      <div class="votes-list">
+        <div class="vote-item" *ngFor="let vote of paginatedVotes; let i = index">
+          <div class="vote-number">
+            #{{ (currentPage - 1) * itemsPerPage + i + 1 }}
+          </div>
+          <div class="vote-info">
+            <div class="vote-main">
+              <span class="vote-emoji">{{ getVoteIcon(vote.prediction) }}</span>
+              <div class="vote-details">
+                <span class="voter-name">{{ vote.voterName }}</span>
+                <span class="vote-prediction">Team {{ vote.prediction === 'niño' ? 'Niño' : 'Niña' }}</span>
+              </div>
+            </div>
+            <div class="vote-timestamp">
+              <span class="vote-date">{{ getFormattedDate(vote.timestamp) }}</span>
+              <span class="vote-time">{{ getFormattedTime(vote.timestamp) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paginación -->
+      <div class="pagination-container" *ngIf="totalPages > 1">
+        <ion-button 
+          fill="clear" 
+          color="light"
+          [disabled]="currentPage === 1"
+          (click)="previousPage()">
+          <ion-icon name="chevron-back" slot="icon-only"></ion-icon>
+        </ion-button>
+        
+        <div class="page-info">
+          <span class="page-numbers">
+            Página {{ currentPage }} de {{ totalPages }}
+          </span>
+          <span class="items-info">
+            ({{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, allVotes.length) }} de {{ allVotes.length }})
+          </span>
+        </div>
+        
+        <ion-button 
+          fill="clear" 
+          color="light"
+          [disabled]="currentPage === totalPages"
+          (click)="nextPage()">
+          <ion-icon name="chevron-forward" slot="icon-only"></ion-icon>
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Mensaje cuando no hay votos -->
+    <div class="no-votes" *ngIf="allVotes.length === 0">
+      <ion-icon name="ballot" class="no-votes-icon"></ion-icon>
+      <h2>No hay predicciones aún</h2>
+      <p>¡Sé el primero en hacer una predicción!</p>
+      <ion-button 
+        expand="block" 
+        color="light" 
+        fill="outline"
+        routerLink="/voting">
+        <ion-icon name="add" slot="start"></ion-icon>
+        Hacer una predicción
+      </ion-button>
+    </div>
+
+    <!-- Copyright -->
+    <div class="copyright-section">
+      <p class="copyright-text">
+        © 2025 Desarrollado por 
+        <a href="https://instagram.com/chana.fp" target="_blank" class="developer-link">
+          Francisco Paredes
+        </a>
+      </p>
+    </div>
+
+  </div>
+</ion-content>

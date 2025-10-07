@@ -96,7 +96,7 @@
       <!-- Formulario de votación (solo si está habilitada) -->
       <ion-card *ngIf="votingEnabled">
         <ion-card-header>
-          <ion-card-title>¡Haz tu predicción!</ion-card-title>
+          <ion-card-title style="color: black;">¡Haz tu predicción!</ion-card-title>
           <ion-card-subtitle *ngIf="minutesRemaining > 1">
             Tiempo restante para votar: {{ minutesRemaining.toFixed(0) }} minutos
           </ion-card-subtitle>
@@ -104,7 +104,7 @@
         <ion-card-content>
           
           <!-- Input para nombre -->
-          <ion-item class="name-input-item">
+          <ion-item class="name-input-item" lines="none">
             <ion-label position="stacked" color="primary">
               <strong>Tu nombre</strong>
             </ion-label>
@@ -196,6 +196,20 @@
           </div>
           <span class="vote-time">{{ getRelativeTime(vote.timestamp) }}</span>
         </div>
+      </div>
+      
+      <!-- Botón para ver todos los votos -->
+      <div class="all-votes-button">
+        <ion-button 
+          expand="block" 
+          fill="outline" 
+          color="light"
+          (click)="goToAllVotes()"
+          class="view-all-btn">
+          <ion-icon name="list" slot="start"></ion-icon>
+          Ver todas las predicciones
+          <ion-icon name="chevron-forward" slot="end"></ion-icon>
+        </ion-button>
       </div>
     </div>
 

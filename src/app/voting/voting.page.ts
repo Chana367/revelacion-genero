@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router } from '@angular/router';
 import { VotingService, Vote, VotingStats } from '../services/voting.service';
 import { Observable, Subscription } from 'rxjs';
 
@@ -21,7 +22,10 @@ export class VotingPage implements OnInit, OnDestroy {
 
   private subscription = new Subscription();
 
-  constructor(private votingService: VotingService) {
+  constructor(
+    private votingService: VotingService,
+    private router: Router
+  ) {
     this.stats$ = this.votingService.getStats();
   }
 
@@ -131,5 +135,9 @@ export class VotingPage implements OnInit, OnDestroy {
     
     const days = Math.floor(hours / 24);
     return `hace ${days}d`;
+  }
+
+  goToAllVotes() {
+    this.router.navigate(['/all-votes']);
   }
 }

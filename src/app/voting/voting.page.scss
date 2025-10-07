@@ -417,6 +417,8 @@
       .stat-number {
         font-size: 1.2rem;
         font-weight: 800;
+        -webkit-text-stroke: 1px black;
+        color: #fff;
       }
       
       .stat-percentage {
@@ -648,6 +650,23 @@
     .vote-time {
       color: #999;
       font-size: 0.8rem;
+    }
+  }
+  
+  .all-votes-button {
+    margin-top: 20px;
+    text-align: center;
+    
+    .view-all-btn {
+      --border-radius: 12px;
+      --color: white;
+      --border-color: rgba(255, 255, 255, 0.5);
+      font-weight: 600;
+      height: 50px;
+      
+      &:hover {
+        --background: rgba(255, 255, 255, 0.1);
+      }
     }
   }
 }
